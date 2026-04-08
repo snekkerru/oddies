@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ODDIES — iGaming Holding</title>
+  <meta name="description" content="ODDIES — an iGaming holding. Coming soon.">
+  <meta property="og:title" content="ODDIES">
+  <meta property="og:description" content="ODDIES — an iGaming holding. Coming soon.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>♠</text></svg>">
+  <style>
+    *, *::before, *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --gold:       #c8a96e;
+      --gold-light: #f0d080;
+      --gold-dim:   #7a6235;
+      --bg:         #070707;
+      --reel-bg:    #060606;
+      --border:     #2a2a2a;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;   /* was hidden — now lets box-shadows breathe vertically */
+      font-family: 'Georgia', serif;
+    }
+
+    /* ── ambient glow ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 700px 350px at 50% 50%,
+          rgba(200,169,110,.045) 0%,
+          transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── wrapper ── */
+    .stage {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 48px;
+    }
+
+    /* ── machines row ── */
+    .machines {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      position: relative;
+    }
+
+    /* connector seam — fixed: uses top:0/bottom:0 instead of px offsets */
+    .machines::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: calc(50% - 0.5px);
+      width: 1px;
+      background: linear-gradient(to bottom,
+        transparent, #2a2a2a 15%, #2a2a2a 85%, transparent);
+      pointer-events: none;
+    }
+
+    /* ── single machine ── */
+    .machine {
+      width: 260px;
+      background: linear-gradient(160deg, #1c1c1c 0%, #0e0e0e 60%, #111 100%);
+      border: 1px solid var(--border);
+      padding: 22px 18px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      box-shadow:
+        0 30px 80px rgba(0,0,0,.9),
+        inset 0 1px 0 rgba(255,255,255,.04),
+        inset 0 -1px 0 rgba(0,0,0,.6);
+    }
+
+    .machine:first-child {
+      border-radius: 18px 0 0 18px;
+      border-right-color: transparent;
+    }
+
+    .machine:last-child {
+      border-radius: 0 18px 18px 0;
+      border-left-color: #1a1a1a;
+    }
+
+    /* ── decorative lever on right machine ── */
+    .machine:last-child::after {
+      content: '';
+      position: absolute;
+      right: -15px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 13px;
+      height: 68px;
+      background: linear-gradient(to right, var(--gold-dim), #181818);
+      border-radius: 0 8px 8px 0;
+      border: 1px solid var(--border);
+      border-left: none;
+      box-shadow: 4px 0 14px rgba(0,0,0,.7);
+    }
+
+    /* top bar */
+    .machine-bar {
+      height: 3px;
+      background: linear-gradient(90deg,
+        transparent, var(--gold-dim) 20%, var(--gold) 50%, var(--gold-dim) 80%, transparent);
+      border-radius: 2px;
+      box-shadow: 0 0 12px rgba(200,169,110,.35);
+    }
+
+    /* reels track */
+    .reels {
+      display: flex;
+      gap: 8px;
+      background: var(--reel-bg);
+      border-radius: 10px;
+      padding: 10px;
+      border: 1px solid #181818;
+      box-shadow:
+        inset 0 3px 10px rgba(0,0,0,.8),
+        inset 0 -1px 4px rgba(0,0,0,.5);
+    }
+
+    /* single reel */
+    .reel {
+      flex: 1;
+      height: 90px;
+      background-color: #030303;
+      /* scanline texture */
+      background-image: repeating-linear-gradient(
+        to bottom,
+        transparent 0px,
+        transparent 3px,
+        rgba(0,0,0,.22) 3px,
+        rgba(0,0,0,.22) 4px
+      );
+      border-radius: 6px;
+      border: 1px solid #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* top/bottom shadow overlay */
+    .reel::before,
+    .reel::after {
+      content: '';
+      position: absolute;
+      left: 0; right: 0;
+      height: 28px;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .reel::before {
+      top: 0;
+      background: linear-gradient(to bottom, #030303 0%, transparent 100%);
+    }
+    .reel::after {
+      bottom: 0;
+      background: linear-gradient(to top, #030303 0%, transparent 100%);
+    }
+
+    /* center line */
+    .reel-line {
+      position: absolute;
+      left: 4px; right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      height: 52px;
+      border-top: 1px solid rgba(200,169,110,.1);
+      border-bottom: 1px solid rgba(200,169,110,.1);
+      border-radius: 2px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* reel strip — vertical column of letters */
+    .reel-strip {
+      position: absolute;
+      left: 0; right: 0;
+      top: 0;
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+      will-change: transform;
+      transition: filter 200ms ease, opacity 160ms ease;
+    }
+
+    .reel-strip.blurred {
+      filter: blur(2px);
+    }
+
+    .reel-letter {
+      flex-shrink: 0;
+      height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.6rem;
+      font-weight: 900;
+      color: var(--gold-dim);
+      font-family: 'Georgia', serif;
+      user-select: none;
+      line-height: 1;
+      width: 100%;
+      text-align: center;
+    }
+
+    /* landed target letter */
+    .reel.landed .reel-letter.target {
+      color: var(--gold-light);
+      text-shadow:
+        0 0 18px rgba(240,208,128,.7),
+        0 0 40px rgba(240,208,128,.25);
+      animation: glow-in 0.3s ease forwards;
+    }
+
+    @keyframes glow-in {
+      0%   { color: var(--gold-dim); text-shadow: none; }
+      100% { color: var(--gold-light); text-shadow: 0 0 18px rgba(240,208,128,.7), 0 0 40px rgba(240,208,128,.25); }
+    }
+
+    /* reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .reel-strip          { transition: none; filter: none !important; }
+      .reel.landed .reel-letter.target { animation: none; }
+    }
+
+    /* dots row */
+    .dots {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #181818;
+      border: 1px solid #272727;
+      transition: background .2s, box-shadow .2s;
+    }
+
+    .dot.on {
+      background: var(--gold);
+      border-color: var(--gold);
+      box-shadow: 0 0 8px rgba(200,169,110,.6);
+    }
+
+    /* bottom bar */
+    .machine-bottom-bar {
+      height: 2px;
+      background: linear-gradient(90deg,
+        transparent, #1e1e1e 30%, #1e1e1e 70%, transparent);
+      border-radius: 2px;
+    }
+
+    /* ── copyright ── */
+    .copyright {
+      font-size: .6rem;
+      letter-spacing: .18em;
+      color: #666;
+      font-family: 'Arial', sans-serif;
+      font-weight: 400;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    /* ── real responsive layout (no scale hacks) ── */
+    @media (max-width: 559px) {
+      .machine         { width: 215px; padding: 18px 14px; gap: 15px; }
+      .reel            { height: 80px; }
+      .reel-letter     { font-size: 2.2rem; height: 80px; }
+      .stage           { gap: 36px; }
+    }
+    @media (max-width: 459px) {
+      .machine         { width: 172px; padding: 15px 12px; gap: 13px; }
+      .reel            { height: 70px; }
+      .reel-letter     { font-size: 1.85rem; height: 70px; }
+      .reels           { gap: 6px; padding: 8px; }
+      .reel-line       { height: 44px; }
+      .stage           { gap: 28px; }
+    }
+    @media (max-width: 379px) {
+      .machine         { width: 148px; padding: 13px 10px; gap: 11px; }
+      .reel            { height: 62px; }
+      .reel-letter     { font-size: 1.6rem; height: 62px; }
+      .reels           { gap: 5px; padding: 7px; }
+      .reel-line       { height: 38px; }
+    }
+    @media (max-width: 329px) {
+      .machine         { width: 130px; padding: 11px 9px; gap: 10px; }
+      .reel            { height: 56px; }
+      .reel-letter     { font-size: 1.4rem; height: 56px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="stage">
+
+  <div class="machines">
+
+    <!-- Machine 1 : O D D -->
+    <div class="machine">
+      <div class="machine-bar"></div>
+      <div class="reels">
+        <div class="reel" id="r0"><div class="reel-line"></div><div class="reel-strip"></div></div>
+        <div class="reel" id="r1"><div class="reel-line"></div><div class="reel-strip"></div></div>
+        <div class="reel" id="r2"><div class="reel-line"></div><div class="reel-strip"></div></div>
+      </div>
+      <div class="dots">
+        <div class="dot" id="d0"></div>
+        <div class="dot" id="d1"></div>
+        <div class="dot" id="d2"></div>
+      </div>
+      <div class="machine-bottom-bar"></div>
+    </div>
+
+    <!-- Machine 2 : I E S -->
+    <div class="machine">
+      <div class="machine-bar"></div>
+      <div class="reels">
+        <div class="reel" id="r3"><div class="reel-line"></div><div class="reel-strip"></div></div>
+        <div class="reel" id="r4"><div class="reel-line"></div><div class="reel-strip"></div></div>
+        <div class="reel" id="r5"><div class="reel-line"></div><div class="reel-strip"></div></div>
+      </div>
+      <div class="dots">
+        <div class="dot" id="d3"></div>
+        <div class="dot" id="d4"></div>
+        <div class="dot" id="d5"></div>
+      </div>
+      <div class="machine-bottom-bar"></div>
+    </div>
+
+  </div><!-- .machines -->
+
+  <div class="copyright">© 2026 Oddies | All Rights Reserved.</div>
+
+</div><!-- .stage -->
+
+<script>
+  const TARGETS  = ['O','D','D','I','E','S'];
+  const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  // ms per letter height during scroll — real slot feel
+  const LETTER_MS  = 140;
+  // number of random letters in the looping strip (before target)
+  const STRIP_RAND = 8;
+
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let cycles = [];
+  // per-reel state
+  const reelState = [];
+
+  function rand() {
+    return ALPHABET[Math.floor(Math.random() * 26)];
+  }
+
+  function wait(ms) {
+    return new Promise(r => { const t = setTimeout(r, ms); cycles.push(t); });
+  }
+
+  function clearCycles() {
+    cycles.forEach(clearTimeout);
+    cycles = [];
+  }
+
+  // Measure the actual reel height at runtime (handles responsive breakpoints)
+  function reelHeight(reelEl) {
+    return reelEl.getBoundingClientRect().height || 90;
+  }
+
+  // Build the strip DOM: target letter first (top), then STRIP_RAND random letters below.
+  // Downward scroll: strip starts showing bottom randoms, animates down until target (index 0) is visible.
+  function buildStrip(strip, target) {
+    strip.innerHTML = '';
+    const targetSpan = document.createElement('span');
+    targetSpan.className = 'reel-letter target';
+    targetSpan.textContent = target;
+    strip.appendChild(targetSpan);
+    for (let i = 0; i < STRIP_RAND; i++) {
+      const span = document.createElement('span');
+      span.className = 'reel-letter';
+      span.textContent = rand();
+      strip.appendChild(span);
+    }
+    return targetSpan;
+  }
+
+  // Animate strip scrolling downward: starts at -(STRIP_RAND * h), moves toward 0 (target visible).
+  function startScroll(strip, h) {
+    const totalH = (STRIP_RAND + 1) * h;
+    let offset = -(STRIP_RAND * h); // last random letter visible at start
+    let rafId;
+    let lastTime = null;
+    const speed = h / LETTER_MS; // px per ms
+
+    function step(now) {
+      if (lastTime === null) lastTime = now;
+      const delta = now - lastTime;
+      lastTime = now;
+      offset += speed * delta;
+      // loop: when target exits bottom, jump back to start
+      if (offset > h) offset -= totalH;
+      strip.style.transform = 'translateY(' + offset + 'px)';
+      rafId = requestAnimationFrame(step);
+    }
+
+    rafId = requestAnimationFrame(step);
+    return {
+      stop() { cancelAnimationFrame(rafId); },
+      getOffset() { return offset; }
+    };
+  }
+
+  function spinAll() {
+    for (let i = 0; i < 6; i++) {
+      const reel  = document.getElementById('r' + i);
+      const strip = reel.querySelector('.reel-strip');
+      const dot   = document.getElementById('d' + i);
+
+      reel.classList.remove('landed', 'spinning');
+      dot.classList.remove('on');
+
+      if (reducedMotion) {
+        const h = reelHeight(reel);
+        const targetSpan = buildStrip(strip, TARGETS[i]);
+        strip.style.transform = 'translateY(0px)';
+        strip.style.transition = '';
+        reelState[i] = { scrollCtrl: null, h, targetSpan };
+        continue;
+      }
+
+      // Fade out the landed letter, then rebuild and start spinning invisibly,
+      // then fade back in — the eye never catches the hard DOM swap.
+      strip.style.opacity = '0';
+
+      const capturedI = i;
+      const t = setTimeout(() => {
+        const h = reelHeight(reel);
+        const targetSpan = buildStrip(strip, TARGETS[capturedI]);
+
+        strip.style.transform = 'translateY(' + (-(STRIP_RAND * h)) + 'px)';
+        strip.style.transition = 'none';
+        strip.style.opacity = '0'; // keep invisible while we reposition
+
+        // Force reflow so the repositioned transform is committed before we
+        // re-enable transitions and start scrolling.
+        strip.getBoundingClientRect();
+
+        strip.classList.add('blurred');
+        strip.style.transition = 'filter 200ms ease, opacity 160ms ease';
+        strip.style.opacity = '1';
+
+        const scrollCtrl = startScroll(strip, h);
+        reelState[capturedI] = { scrollCtrl, h, targetSpan };
+      }, 160);
+      cycles.push(t);
+    }
+  }
+
+  function stopReel(i) {
+    return new Promise(resolve => {
+      const reel  = document.getElementById('r' + i);
+      const strip = reel.querySelector('.reel-strip');
+      const dot   = document.getElementById('d' + i);
+      const state = reelState[i];
+
+      if (reducedMotion) {
+        reel.classList.add('landed');
+        dot.classList.add('on');
+        const t = setTimeout(resolve, 380);
+        cycles.push(t);
+        return;
+      }
+
+      // Stop the rAF loop — offset is random, we don't use it.
+      state.scrollCtrl.stop();
+
+      // Normalize: always snap from exactly 2 letter-heights above the target.
+      // This makes every reel's deceleration identical regardless of when it was stopped.
+      const RUN_IN_H = 2 * state.h;
+      strip.style.transition = 'none';
+      strip.style.transform  = 'translateY(' + (-RUN_IN_H) + 'px)';
+      strip.getBoundingClientRect(); // force reflow so the instant reposition takes effect
+
+      // Decelerate into target — same distance, same curve for all reels.
+      // Include filter so blur fades during the first part of the deceleration.
+      strip.style.transition = 'transform 460ms cubic-bezier(0.25, 1, 0.35, 1), filter 150ms ease';
+      strip.style.transform  = 'translateY(0px)';
+
+      // Remove blur — fades out via the filter transition above
+      strip.classList.remove('blurred');
+
+      // After transition completes, trigger landed state
+      const t = setTimeout(() => {
+        strip.style.transition = '';
+        reel.classList.add('landed');
+        dot.classList.add('on');
+        const t2 = setTimeout(resolve, 380);
+        cycles.push(t2);
+      }, 480);
+      cycles.push(t);
+    });
+  }
+
+  async function cycle() {
+    clearCycles();
+    spinAll();
+
+    await wait(1400);
+
+    for (let i = 0; i < 6; i++) {
+      if (i > 0) await wait(480);
+      await stopReel(i);
+    }
+
+    await wait(2200);
+    cycle();
+  }
+
+  cycle();
+</script>
+
+</body>
+</html>
